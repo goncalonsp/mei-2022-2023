@@ -30,7 +30,47 @@ def printDebugStatus(checkpoint, num_lines, l, interval):
     return checkpoint
 
 def main():
-    parser = argparse.ArgumentParser(description="Execute batch runs for Maximum Flow Problem")
+    description = """
+        Execute batch runs for Maximum Flow Problem.
+        This script is capable of executing all algorithms for each of the parameters any number of times.
+
+        Parameters are provided as a csv file of the format:
+
+        ```csv
+        n,p,r,s
+        100,0.5,100,86029955770628
+        105,0.5,100,368539058687997
+        110,0.5,100,542815961637859
+        115,0.5,100,511607154454856
+        120,0.5,100,712489507517039
+        ...
+        ```
+
+        Where:
+
+        * `n` is the number of vertices 
+        * `p` is the arc probability (0 <= p <= 1)
+        * `r` is the maximum range of capacity
+        * `s` is the random seed
+
+        It outputs a file in the format:
+
+        ```csv
+        n,p,r,s,Dinic,EK,MPM
+        100,0.5,100,86029955770628,0.000166945,0.00161067,0.000567869
+        100,0.5,100,86029955770628,0.000179486,0.00159629,0.000719177
+        100,0.5,100,86029955770628,0.00014913,0.00179331,0.000623259
+        100,0.5,100,86029955770628,0.000154795,0.00150538,0.000584598
+        ...
+        ```
+
+        In addition to the inputs we have:
+
+        * `Dinic` the execution time for the Dinic algorithm implementation
+        * `EK` the execution time for the EK algorithm implementation
+        * `MPM` the execution time for the MPM algorithm implementation
+    """
+    parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("parametersFile", type=str, help="csv file with parameters for each run")
     parser.add_argument("timeout", type=str, help="max time in seconds that each run will be allowed to take (for each of the algorithms)")
     parser.add_argument("--output", "-o", type=str, default="results.csv", help="csv file to output results to (default: 'results.csv')")
