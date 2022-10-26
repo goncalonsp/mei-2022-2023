@@ -31,13 +31,16 @@ df$EK_time
 df$MPM_time
 
 #------------------------ Data Summary --------------------------------------
-
 summary(df)
+
+summary(df$Dinic_time)
+summary(df$EK_time)
+summary(df$MPM_time)
 
 #------------------------ Linear Regression ---------------------------------
 
 
-lr.out = ((df$Dinic_time)~df$n_vert+df$prob*df$n_vert) # sabemos que o algo Dinic é quadratico 
+lr.out = (lm(df$Dinic_time~df$n_vert+df$prob*df$n_vert)) # sabemos que o algo Dinic é quadratico 
 
 summary(lr.out) 
 
@@ -59,11 +62,31 @@ plot(df$Dinic_time~df$n_vert)
 plot(df$EK_time~df$n_vert)
 plot(df$MPM_time~df$n_vert)
 
-scatterplot3d(df$Dinic_time~df$n_vert+df$prob*df$n_vert)
+plot(lm(log(df$Dinic_time)~df$n_vert+df$prob*df$n_vert))
 
-scatterplot3d(df$EK_time~df$n_vert+df$prob*df$n_vert)
+plot(lm(log(df$Dinic_time)~df$n_vert)) 
 
-scatterplot3d(df$MPM_time~df$n_vert+df$prob*df$n_vert)
+scatterplot3d(x = df$n_vert, y =df$prob*df$n_vert, z =df$Dinic_time,
+              xlab = 'n_vertices', ylab = 'prob', zlab = 'cpu_time',
+              main = 'Dinic.cpp')
+
+scatterplot3d(x = df$n_vert, y =df$prob*df$n_vert, z =df$EK_time,
+              xlab = 'n_vertices', ylab = 'prob', zlab = 'cpu_time',
+              main = 'EK.cpp')
+
+scatterplot3d(x = df$n_vert, y =df$prob*df$n_vert, z =df$MPM_time,
+              xlab = 'n_vertices', ylab = 'prob', zlab = 'cpu_time',
+              main = 'MPM.cpp')
+#---------------------------------------------------------
+scatterplot3d(x = df$n_vert, y =df$prob, z =df$Dinic_time,
+              xlab = 'n_vertices', ylab = 'prob', zlab = 'cpu_time',
+              main = 'Dinic.cpp')
+scatterplot3d(x = df$n_vert, y =df$prob, z =df$EK_time,
+              xlab = 'n_vertices', ylab = 'prob', zlab = 'cpu_time',
+              main = 'EK.cpp')
+scatterplot3d(x = df$n_vert, y =df$prob, z =df$MPM_time,
+              xlab = 'n_vertices', ylab = 'prob', zlab = 'cpu_time',
+              main = 'MPM.cpp')
 
 plot(df)
 
