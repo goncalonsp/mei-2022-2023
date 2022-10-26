@@ -88,13 +88,13 @@ def main():
         graphFileName = os.path.join(tmp, 'graph.txt')
         with open(csvFileName, newline='') as csvFile:
             checkpoint = datetime(1970, 1, 1)
-            num_lines = sum(1 for line in csvFile)
+            num_lines = sum(1 for line in csvFile) - 1
             csvFile.seek(0)
             
 
             csvReader = csv.DictReader(csvFile, delimiter=',', quotechar='"')
             for l, parameter in enumerate(csvReader):
-                checkpoint = printDebugStatus(checkpoint, num_lines, l, interval)
+                checkpoint = printDebugStatus(checkpoint, num_lines, l+1, interval)
                 generateGraph(parameter['n'], parameter['p'], parameter['r'], parameter['s'], graphFileName)
 
                 for i in range(repetitions):
