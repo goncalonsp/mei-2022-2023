@@ -4,6 +4,7 @@ from datetime import datetime
 import os
 import subprocess
 import tempfile
+import string
 
 def generateGraph(n, p, r, s, outputFileName):
     graphGeneratorCmd = ["python3", "./code/gen.py", n, p, r, s, outputFileName]
@@ -70,18 +71,27 @@ def main():
         * `EK` the execution time for the EK algorithm implementation
         * `MPM` the execution time for the MPM algorithm implementation
     """
+    allowed_algorithms = ['dinic', 'ek', 'mpm']
     parser = argparse.ArgumentParser(description=description, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("parametersFile", type=str, help="csv file with parameters for each run")
     parser.add_argument("timeout", type=str, help="max time in seconds that each run will be allowed to take (for each of the algorithms)")
     parser.add_argument("--output", "-o", type=str, default="results.csv", help="csv file to output results to (default: 'results.csv')")
     parser.add_argument("--repeat", "-r", type=int, default=1, help="number of repetitions for each combination or parameter and algorithm (default: 1)")
     parser.add_argument("--status", "-s", type=int, default=10, help="report status each X seconds (default: 10 seconds)")
+    parser.add_argument("--algorithm", "-a", nargs='*', default=allowed_algorithms, help=f"The algorithms to run against. Defaults to all: {allowed_algorithms}")
     args = parser.parse_args()
     csvFileName = args.parametersFile
     timeout = args.timeout
     resultsFileName = args.output
     repetitions = args.repeat
     interval = args.status
+    algorithms = [alg.lower() for alg in args.algorithm]
+
+    # validate algorithms chosen
+    if (not all(alg in allowed_algorithms for alg in algorithms)):
+        quit(f"provided algorithms are not valid. Please choose any arrangement from the subset of {allowed_algorithms}")
+    if (len(algorithms) == 0):
+        quit(f"at least one algorithm must be provided. Please choose any arrangement from the subset of {allowed_algorithms}")
 
     results = []
     with tempfile.TemporaryDirectory() as tmp:
@@ -98,18 +108,22 @@ def main():
                 generateGraph(parameter['n'], parameter['p'], parameter['r'], parameter['s'], graphFileName)
 
                 for i in range(repetitions):
-                    valueDinic, timeDinic = runAlgorithm("./code/Dinic", graphFileName, timeout)
-                    valueEK, timeEK = runAlgorithm("./code/EK", graphFileName, timeout)
-                    valueMPM, timeMPM = runAlgorithm("./code/MPM", graphFileName, timeout)
-
                     result = dict()
                     result["n"] = parameter['n']
                     result["p"] = parameter['p']
                     result["r"] = parameter['r']
                     result["s"] = parameter['s']
-                    result["Dinic"] = timeDinic
-                    result["EK"] = timeEK
-                    result["MPM"] = timeMPM
+
+                    if 'dinic' in algorithms:
+                        valueDinic, timeDinic = runAlgorithm("./code/Dinic", graphFileName, timeout)
+                        result["Dinic"] = timeDinic
+                    if 'ek' in algorithms:
+                        valueEK, timeEK = runAlgorithm("./code/EK", graphFileName, timeout)
+                        result["EK"] = timeEK
+                    if 'mpm' in algorithms:
+                        valueMPM, timeMPM = runAlgorithm("./code/MPM", graphFileName, timeout)
+                        result["MPM"] = timeMPM
+
                     results.append(result)
 
     print(f"writing results to '{resultsFileName}'...")
