@@ -1,0 +1,107 @@
+---
+title: "Projeto MEI - Meta 1"
+output: html_notebook
+---
+
+#-------------------- Reading the data into R ---------------------------
+#   n_vert = number of vertices
+#   prob = arc probability (0 <= p <= 1)
+#   range = maximum range of capacity
+#   seed = random seed
+#   _time = time in secs
+
+# EDA dataframe
+
+```{r}
+df <- read.csv(file = "/Users/tiagodelgado/mei-proj/resultsEDAv3.csv", header=TRUE)
+
+df$n_vert
+
+df$prob
+
+df$range
+
+df$seed
+
+df$Dinic_time
+
+df$EK_time
+
+df$MPM_time
+
+df$A
+```
+
+#------------------------ Data Summary --------------------------------------
+```{r}
+summary(df)
+summary(df$Dinic_time)
+summary(df$EK_time)
+summary(df$MPM_time)
+```
+
+#------------------------ Linear Regression ---------------------------------
+```{r}
+lr.out = lm((df$Dinic_time)~df$A+df$n_vert) 
+summary(lr.out)
+
+lr.out = lm((df$Dinic_time)~df$A+I(df$n_vert^2))  
+summary(lr.out)
+
+lr.out = lm((df$Dinic_time)~df$A+I(df$n_vert^3)) 
+summary(lr.out)
+```
+#------------------------ Data Visualization ---------------------------------
+
+```{r}
+
+plot(df$Dinic_time~df$n_vert, xlab = 'n_vert', ylab = 'Dinic_time',
+     main = 'Dinic.cpp')
+
+plot(df$EK_time~df$n_vert, xlab = 'n_vert', ylab = 'EK_time',
+     main = 'EK.cpp')
+
+plot(df$MPM_time~df$n_vert, xlab = 'n_vert', ylab = 'MPM_time',
+     main = 'MPM.cpp')
+```
+Notas :
+
+
+```{r}
+plot(lm((df$Dinic_time)~df$A+df$n_vert)) 
+
+plot(lm((df$Dinic_time)~df$A+I(df$n_vert^2)))
+
+plot(lm((df$Dinic_time)~df$A+I(df$n_vert^3)))
+```
+
+Notas :
+
+```{r}
+install.packages("scatterplot3d", dependencies = TRUE)
+library(scatterplot3d)
+```
+
+```{r}
+scatterplot3d(x = df$n_vert, y =df$prob, z =df$Dinic_time,
+              xlab = 'n_vert', ylab = 'prob', zlab = 'cpu_time',
+              main = 'Dinic.cpp')
+
+scatterplot3d(x = df$n_vert, y =df$prob, z =df$EK_time,
+              xlab = 'n_vert', ylab = 'prob', zlab = 'cpu_time',
+              main = 'EK.cpp')
+
+scatterplot3d(x = df$n_vert, y =df$prob, z =df$MPM_time,
+              xlab = 'n_vert', ylab = 'prob', zlab = 'cpu_time',
+              main = 'MPM.cpp')
+```
+
+
+```{r}
+boxplot(df$Dinic_time~df$n_vert) 
+boxplot(df$EK_time~df$n_vert) 
+boxplot(df$MPM_time~df$n_vert) 
+```
+
+
+
