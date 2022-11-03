@@ -1,71 +1,217 @@
 ---
 title: "Projeto MEI - Meta 1"
 output: html_notebook
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
-#-------------------- Reading the data into R ---------------------------
-#   n_vert = number of vertices
-#   prob = arc probability (0 <= p <= 1)
-#   range = maximum range of capacity
-#   seed = random seed
-#   _time = time in secs
+# Dependencies
 
-# EDA dataframe
-
-```{r}
-df <- read.csv(file = "/Users/tiagodelgado/mei-proj/resultsEDAv3.csv", header=TRUE)
-
-df$n_vert
-
-df$prob
-
-df$range
-
-df$seed
-
-df$Dinic_time
-
-df$EK_time
-
-df$MPM_time
-
-df$A
+```{r Libraries}
+#install.packages("scatterplot3d", dependencies = TRUE)
+library(scatterplot3d)
+#install.packages("rgl")
+library(rgl)
+options(rgl.printRglwidget = TRUE)
 ```
 
-#------------------------ Data Summary --------------------------------------
+```{r Compute colormap function}
+compute_colormap <- function(d) {
+  zlim <- range(d)
+  zlen <- zlim[2] - zlim[1] + 1
+  colorlut <- terrain.colors(zlen)
+  colorlut[d - zlim[1] + 1]
+}
+```
+
+# Max Flow problem dataframe
+
+The dataset has the following parameters:
+
+-   n_vert = number of vertices
+-   prob = arc probability (0 \<= p \<= 1)
+-   range = maximum range of capacity
+-   seed = random seed
+-   Dinic_time = time in secs
+-   EK_time = time in secs
+-   MPM_time = time in secs
+
+```{r Load data set}
+df <- read.csv(file = "resultsEDAv3.csv", header=TRUE)
+```
+
+# Data visualization
+
 ```{r}
 summary(df)
-summary(df$Dinic_time)
-summary(df$EK_time)
-summary(df$MPM_time)
 ```
 
-#------------------------ Linear Regression ---------------------------------
-```{r}
-lr.out = lm((df$Dinic_time)~df$A+df$n_vert) 
-summary(lr.out)
-
-lr.out = lm((df$Dinic_time)~df$A+I(df$n_vert^2))  
-summary(lr.out)
-
-lr.out = lm((df$Dinic_time)~df$A+I(df$n_vert^3)) 
-summary(lr.out)
-```
-#------------------------ Data Visualization ---------------------------------
+## Dinic
 
 ```{r}
-
-plot(df$Dinic_time~df$n_vert, xlab = 'n_vert', ylab = 'Dinic_time',
+plot(df$Dinic_time ~ df$n_vert, xlab = 'n_vert', ylab = 'Dinic_time',
      main = 'Dinic.cpp')
-
-plot(df$EK_time~df$n_vert, xlab = 'n_vert', ylab = 'EK_time',
+plot(df$Dinic_time ~ df$prob, xlab = 'prob', ylab = 'Dinic_time',
+     main = 'Dinic.cpp')
+plot(df$EK_time ~ df$n_vert, xlab = 'n_vert', ylab = 'EK_time',
      main = 'EK.cpp')
-
-plot(df$MPM_time~df$n_vert, xlab = 'n_vert', ylab = 'MPM_time',
+plot(df$EK_time ~ df$prob, xlab = 'prob', ylab = 'EK_time',
+     main = 'EK.cpp')
+plot(df$MPM_time ~ df$n_vert, xlab = 'n_vert', ylab = 'MPM_time',
+     main = 'MPM.cpp')
+plot(df$MPM_time ~ df$prob, xlab = 'prob', ylab = 'MPM_time',
      main = 'MPM.cpp')
 ```
-Notas :
 
+```{r}
+plot3d(x = df$n_vert, y = df$prob, z =df$Dinic_time,
+       xlab = 'n_vert', ylab = 'prob', zlab = 'Dinic_time',
+       main = 'Dinic.cpp') 
+plot3d(x = df$n_vert, y = df$prob, z =df$EK_time,
+        xlab = 'n_vert', ylab = 'prob', zlab = 'EK_time',
+        main = 'EK.cpp') 
+plot3d(x = df$n_vert, y = df$prob, z =df$MPM_time,
+       xlab = 'n_vert', ylab = 'prob', zlab = 'MPM_time',
+       main = 'MPM.cpp')
+```
+
+# Linear Regression
+
+## Dinic
+
+```{r Dinic regression using linear model}
+lr.out = lm(Dinic_time ~ I(n_vert * prob) + n_vert, data = df) 
+summary(lr.out)
+plot(lr.out)
+n_gen <- seq(min(df$n_vert), max(df$n_vert), length.out = 100)
+p_gen <- seq(min(df$prob), max(df$prob), length.out = 100)
+pred <- outer(X=n_gen, Y=p_gen, FUN=function(x,y)predict(lr.out, data.frame(n_vert = x, prob = y), type = "response"))
+plot3d(x = df$n_vert, y = df$prob, z = df$Dinic_time,
+       xlab = 'n_vert', ylab = 'prob', zlab = 'Dinic.cpp',
+       col=c("blue"))
+col <- compute_colormap(pred)  
+surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
+```
+
+```{r Dinic regression using quadratic model}
+lr.out = lm(Dinic_time ~ I(n_vert * prob) + I(n_vert^2), data = df)  
+summary(lr.out)
+plot(lr.out)
+n_gen <- seq(min(df$n_vert), max(df$n_vert), length.out = 100)
+p_gen <- seq(min(df$prob), max(df$prob), length.out = 100)
+pred <- outer(X=n_gen, Y=p_gen, FUN=function(x,y)predict(lr.out, data.frame(n_vert = x, prob = y), type = "response"))
+plot3d(x = df$n_vert, y = df$prob, z = df$Dinic_time,
+       xlab = 'n_vert', ylab = 'prob', zlab = 'Dinic.cpp',
+       col=c("blue"))
+col <- compute_colormap(pred)  
+surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
+```
+
+```{r Dinic regression using cubic model}
+lr.out = lm(Dinic_time ~ I(n_vert * prob) + I(n_vert^3), data = df) 
+summary(lr.out)
+plot(lr.out)
+n_gen <- seq(min(df$n_vert), max(df$n_vert), length.out = 100)
+p_gen <- seq(min(df$prob), max(df$prob), length.out = 100)
+pred <- outer(X=n_gen, Y=p_gen, FUN=function(x,y)predict(lr.out, data.frame(n_vert = x, prob = y), type = "response"))
+plot3d(x = df$n_vert, y = df$prob, z = df$Dinic_time,
+       xlab = 'n_vert', ylab = 'prob', zlab = 'Dinic.cpp',
+       col=c("blue"))
+col <- compute_colormap(pred)
+surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
+```
+The quadratic model $A + n\_vert^2$ or $n\_vert * prob + n\_vert^2$ is clearly the better.
+
+## EK
+
+```{r EK regression using linear model}
+lr.out = lm(EK_time ~ I(n_vert * prob) + n_vert, data = df) 
+summary(lr.out)
+plot(lr.out)
+n_gen <- seq(min(df$n_vert), max(df$n_vert), length.out = 100)
+p_gen <- seq(min(df$prob), max(df$prob), length.out = 100)
+pred <- outer(X=n_gen, Y=p_gen, FUN=function(x,y)predict(lr.out, data.frame(n_vert = x, prob = y), type = "response"))
+plot3d(x = df$n_vert, y = df$prob, z = df$EK_time,
+       xlab = 'n_vert', ylab = 'prob', zlab = 'EK.cpp',
+       col=c("blue"))
+col <- compute_colormap(pred)  
+surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
+```
+
+```{r EK regression using quadratic model}
+lr.out = lm(EK_time ~ I(n_vert * prob) + I(n_vert^2), data = df)  
+summary(lr.out)
+plot(lr.out)
+n_gen <- seq(min(df$n_vert), max(df$n_vert), length.out = 100)
+p_gen <- seq(min(df$prob), max(df$prob), length.out = 100)
+pred <- outer(X=n_gen, Y=p_gen, FUN=function(x,y)predict(lr.out, data.frame(n_vert = x, prob = y), type = "response"))
+plot3d(x = df$n_vert, y = df$prob, z = df$EK_time,
+       xlab = 'n_vert', ylab = 'prob', zlab = 'EK.cpp',
+       col=c("blue"))
+col <- compute_colormap(pred)  
+surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
+```
+
+```{r EK regression using cubic model}
+lr.out = lm(EK_time ~ I(n_vert * prob) + I(n_vert^3), data = df) 
+summary(lr.out)
+plot(lr.out)
+n_gen <- seq(min(df$n_vert), max(df$n_vert), length.out = 100)
+p_gen <- seq(min(df$prob), max(df$prob), length.out = 100)
+pred <- outer(X=n_gen, Y=p_gen, FUN=function(x,y)predict(lr.out, data.frame(n_vert = x, prob = y), type = "response"))
+plot3d(x = df$n_vert, y = df$prob, z = df$EK_time,
+       xlab = 'n_vert', ylab = 'prob', zlab = 'EK.cpp',
+       col=c("blue"))
+col <- compute_colormap(pred)  
+surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
+```
+
+## MPM
+
+```{r MPM regression using linear model}
+lr.out = lm(MPM_time ~ I(n_vert * prob) + n_vert, data = df) 
+summary(lr.out)
+plot(lr.out)
+n_gen <- seq(min(df$n_vert), max(df$n_vert), length.out = 100)
+p_gen <- seq(min(df$prob), max(df$prob), length.out = 100)
+pred <- outer(X=n_gen, Y=p_gen, FUN=function(x,y)predict(lr.out, data.frame(n_vert = x, prob = y), type = "response"))
+plot3d(x = df$n_vert, y = df$prob, z = df$MPM_time,
+       xlab = 'n_vert', ylab = 'prob', zlab = 'MPM.cpp',
+       col=c("blue"))
+col <- compute_colormap(pred)  
+surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
+```
+
+```{r MPM regression using quadratic model}
+lr.out = lm(MPM_time ~ I(n_vert * prob) + I(n_vert^2), data = df)  
+summary(lr.out)
+plot(lr.out)
+n_gen <- seq(min(df$n_vert), max(df$n_vert), length.out = 100)
+p_gen <- seq(min(df$prob), max(df$prob), length.out = 100)
+pred <- outer(X=n_gen, Y=p_gen, FUN=function(x,y)predict(lr.out, data.frame(n_vert = x, prob = y), type = "response"))
+plot3d(x = df$n_vert, y = df$prob, z = df$MPM_time,
+       xlab = 'n_vert', ylab = 'prob', zlab = 'MPM.cpp',
+       col=c("blue"))
+col <- compute_colormap(pred)  
+surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
+```
+
+```{r MPM regression using cubic model}
+lr.out = lm(MPM_time ~ I(n_vert * prob) + I(n_vert^3), data = df) 
+summary(lr.out)
+plot(lr.out)
+n_gen <- seq(min(df$n_vert), max(df$n_vert), length.out = 100)
+p_gen <- seq(min(df$prob), max(df$prob), length.out = 100)
+pred <- outer(X=n_gen, Y=p_gen, FUN=function(x,y)predict(lr.out, data.frame(n_vert = x, prob = y), type = "response"))
+plot3d(x = df$n_vert, y = df$prob, z = df$MPM_time,
+       xlab = 'n_vert', ylab = 'prob', zlab = 'MPM.cpp',
+       col=c("blue"))
+col <- compute_colormap(pred)  
+surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
+```
+
+# Notas
 
 ```{r}
 plot(lm((df$Dinic_time)~df$A+df$n_vert)) 
@@ -73,13 +219,6 @@ plot(lm((df$Dinic_time)~df$A+df$n_vert))
 plot(lm((df$Dinic_time)~df$A+I(df$n_vert^2)))
 
 plot(lm((df$Dinic_time)~df$A+I(df$n_vert^3)))
-```
-
-Notas :
-
-```{r}
-install.packages("scatterplot3d", dependencies = TRUE)
-library(scatterplot3d)
 ```
 
 ```{r}
@@ -96,12 +235,8 @@ scatterplot3d(x = df$n_vert, y =df$prob, z =df$MPM_time,
               main = 'MPM.cpp')
 ```
 
-
 ```{r}
 boxplot(df$Dinic_time~df$n_vert) 
 boxplot(df$EK_time~df$n_vert) 
 boxplot(df$MPM_time~df$n_vert) 
 ```
-
-
-
