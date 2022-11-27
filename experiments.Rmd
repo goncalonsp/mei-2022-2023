@@ -42,13 +42,13 @@ All data sets have the following variables:
 -   $EK$ = execution time of the EK.cpp algorithm in secs
 -   $MPM$ = execution time of the MPM.cpp algorithm in secs
 
-For the number of arcs $|A|$, we will use $|A|=np$.
+For the number of arcs $|A|$, as we are considering a undirected graph, we will use $|A|=p\frac{n(n-1)}{2}$.
 
 # Dinic
 
 ```{r Load Dinic data set}
-df <- read.csv(file = "results_n1000-10000_p0.3-0.7_6seed_dinic.csv", header=TRUE)
-df$a <- df$n * df$p
+df <- read.csv(file = "results_n1000-10000_p0.1-0.9_6seed_dinic.csv", header=TRUE)
+df$a <- df$p * df$n * (df$n - 1) * 0.5
 ```
 
 ## Analysis
@@ -82,7 +82,7 @@ plot3d(x = df$n, y = df$a, z = df$Dinic,
 We know that Dinic has a time complexity of $O(|A||V|^2)$, so we start by fitting it to a quadratic function of the same form:
 
 ```{r Dinic regression using a * n^2}
-lr <- lm(Dinic ~ I(n*p*n^2), data = df)
+lr <- lm(Dinic ~ I((p*n*(n-1)*0.5)*n^2), data = df)
 summary(lr)
 plot(lr)
 n_gen <- seq(min(df$n), max(df$n), length.out = 100)
@@ -97,7 +97,7 @@ surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
 Let's try making $|A|$ a separate coeficient:
 
 ```{r Dinic regression using a + n^2}
-lr <- lm(Dinic ~ I(n*p) + I(n^2), data = df)
+lr <- lm(Dinic ~ I(p*n*(n-1)*0.5) + I(n^2), data = df)
 summary(lr)
 plot(lr)
 n_gen <- seq(min(df$n), max(df$n), length.out = 100)
@@ -113,7 +113,7 @@ surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
 It get's us a better result. For completeness we also try using a linear model. We can see that it performs worse as expected.
 
 ```{r Dinic regression using a + n}
-lr <- lm(Dinic ~ I(n*p) + n, data = df)
+lr <- lm(Dinic ~ I(p*n*(n-1)*0.5) + n, data = df)
 summary(lr)
 plot(lr)
 n_gen <- seq(min(df$n), max(df$n), length.out = 100)
@@ -129,8 +129,8 @@ surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
 # MPM
 
 ```{r Load MPM data set}
-df <- read.csv(file = "results_n1000-5000_p0.3-0.7_6seed_mpm.csv", header=TRUE)
-df$a <- df$n * df$p
+df <- read.csv(file = "results_n1000-5000_p0.1-0.9_6seed_mpm.csv", header=TRUE)
+df$a <- df$p * df$n * (df$n - 1) * 0.5
 ```
 
 ## Analysis
@@ -173,7 +173,7 @@ As we saw with the visualization, $p$ has impact on the time took and so we must
 Let's add a dependency on $a$:
 
 ```{r MPM regression using a + n^3}
-lr <- lm(MPM ~ I(n*p) + I(n^3), data = df)
+lr <- lm(MPM ~ I(p*n*(n-1)*0.5) + I(n^3), data = df)
 summary(lr)
 plot(lr)
 n_gen <- seq(min(df$n), max(df$n), length.out = 100)
@@ -189,7 +189,7 @@ surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
 Gets us a better result but there's still room for improvement. Let's also make $|A|$ cubic:
 
 ```{r MPM regression using a^3 + n^3}
-lr <- lm(MPM ~ I((n*p)^3) + I(n^3), data = df)
+lr <- lm(MPM ~ I((p*n*(n-1)*0.5)^3) + I(n^3), data = df)
 summary(lr)
 plot(lr)
 n_gen <- seq(min(df$n), max(df$n), length.out = 100)
@@ -208,7 +208,7 @@ Clearly better than the previous results.
 
 ```{r Load EK data set}
 df <- read.csv(file = "results_n400-1500_p0.1-0.9_6seed_ek.csv", header=TRUE)
-df$a <- df$n * df$p
+df$a <- df$p * df$n * (df$n - 1) * 0.5
 ```
 
 ## Analysis
@@ -234,7 +234,7 @@ plot3d(x = df$n, y = df$p, z = df$EK,
 We expect that EK follows a time complexity of $O(|A|^2|V|)$, so we start by fitting it:
 
 ```{r EK regression using a^2 * n}
-lr <- lm(EK ~ I((n * p)^2 * n), data = df)
+lr <- lm(EK ~ I((p*n*(n-1)*0.5)^2 * n), data = df)
 summary(lr)
 plot(lr)
 n_gen <- seq(min(df$n), max(df$n), length.out = 100)
@@ -250,7 +250,7 @@ surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
 Let's try to instead have $n$ as an new term:
 
 ```{r EK regression using a^2 + n}
-lr <- lm(EK ~ I((n * p)^2) + n, data = df)
+lr <- lm(EK ~ I((p*n*(n-1)*0.5)^2) + n, data = df)
 summary(lr)
 plot(lr)
 n_gen <- seq(min(df$n), max(df$n), length.out = 100)
@@ -266,7 +266,7 @@ surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
 Get's worse. Let's try also removing the $n$ part, thus using only $|A|^2$:
 
 ```{r EK regression using a^2}
-lr <- lm(EK ~ I((n * p)^2), data = df)
+lr <- lm(EK ~ I((p*n*(n-1)*0.5)^2), data = df)
 summary(lr)
 plot(lr)
 n_gen <- seq(min(df$n), max(df$n), length.out = 100)
