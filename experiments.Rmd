@@ -58,7 +58,8 @@ summary(df)
 ```
 
 ```{r}
-boxplot(df$Dinic~df$p, main="Dinic.cpp")
+boxplot(Dinic ~ n, main="Dinic.cpp", data = df)
+boxplot(Dinic ~ p, main="Dinic.cpp", data = df)
 ```
 
 As can be seen in the 3D graph below, as *n* increases the execution time increases. We can also observe that, for larger values of *n*, as *p* increases the variance of the execution time decreases.
@@ -110,6 +111,20 @@ col <- compute_colormap(pred)
 surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
 ```
 
+```{r Dinic regression using n^2}
+lr <- lm(Dinic ~ I(n^2), data = df)
+summary(lr)
+plot(lr)
+n_gen <- seq(min(df$n), max(df$n), length.out = 100)
+p_gen <- seq(min(df$p), max(df$p), length.out = 100)
+pred <- outer(X=n_gen, Y=p_gen, FUN=function(x,y)predict(lr, data.frame(n = x, p = y), type = "response"))
+plot3d(x = df$n, y = df$p, z = df$Dinic,
+       xlab = 'n', ylab = 'p', zlab = 'Dinic',
+       col=c("blue"))
+col <- compute_colormap(pred)  
+surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
+```
+
 It get's us a better result. For completeness we also try using a linear model. We can see that it performs worse as expected.
 
 ```{r Dinic regression using a + n}
@@ -140,7 +155,8 @@ summary(df)
 ```
 
 ```{r}
-boxplot(df$MPM~df$p, main="MPM.cpp")
+boxplot(MPM ~ n, main="MPM.cpp", data = df)
+boxplot(MPM ~ p, main="MPM.cpp", data = df)
 ```
 
 Similar to Dinic, as *n* increases the execution time increases. On the other hand we see that, more than impacting the variance, *p* has a considerable effect on the execution time. As *p* increases, the execution time also grows. This leads us to question the assumption that MPM would follow a time complexity of $O(|V|^3)$.
@@ -188,8 +204,8 @@ surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
 
 Gets us a better result but there's still room for improvement. Let's also make $|A|$ cubic:
 
-```{r MPM regression using a^3 + n^3}
-lr <- lm(MPM ~ I((p*n*(n-1)*0.5)^3) + I(n^3), data = df)
+```{r MPM regression using a}
+lr <- lm(MPM ~ I(p*n*(n-1)*0.5), data = df)
 summary(lr)
 plot(lr)
 n_gen <- seq(min(df$n), max(df$n), length.out = 100)
@@ -203,6 +219,34 @@ surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
 ```
 
 Clearly better than the previous results.
+
+```{r MPM regression using a^2}
+lr <- lm(MPM ~ I((p*n*(n-1)*0.5)^2), data = df)
+summary(lr)
+plot(lr)
+n_gen <- seq(min(df$n), max(df$n), length.out = 100)
+p_gen <- seq(min(df$p), max(df$p), length.out = 100)
+pred <- outer(X=n_gen, Y=p_gen, FUN=function(x,y)predict(lr, data.frame(n = x, p = y), type = "response"))
+plot3d(x = df$n, y = df$p, z = df$MPM,
+       xlab = 'n', ylab = 'p', zlab = 'MPM',
+       col=c("blue"))
+col <- compute_colormap(pred)  
+surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
+```
+
+```{r MPM regression using a^3}
+lr <- lm(MPM ~ I((p*n*(n-1)*0.5)^3), data = df)
+summary(lr)
+plot(lr)
+n_gen <- seq(min(df$n), max(df$n), length.out = 100)
+p_gen <- seq(min(df$p), max(df$p), length.out = 100)
+pred <- outer(X=n_gen, Y=p_gen, FUN=function(x,y)predict(lr, data.frame(n = x, p = y), type = "response"))
+plot3d(x = df$n, y = df$p, z = df$MPM,
+       xlab = 'n', ylab = 'p', zlab = 'MPM',
+       col=c("blue"))
+col <- compute_colormap(pred)  
+surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
+```
 
 # EK
 
@@ -218,7 +262,8 @@ summary(df)
 ```
 
 ```{r}
-boxplot(df$EK~df$p, main="EK.cpp")
+boxplot(EK ~ n, main="EK.cpp", data = df)
+boxplot(EK ~ p, main="EK.cpp", data = df)
 ```
 
 The EK algorithm seems to behave similar to MPM. Both $n$ and $p$ impact the execution time as they increase.
@@ -280,6 +325,20 @@ surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
 ```
 
 Better but still worse than the first model.
+
+```{r EK regression using a^3}
+lr <- lm(EK ~ I((p*n*(n-1)*0.5)^3), data = df)
+summary(lr)
+plot(lr)
+n_gen <- seq(min(df$n), max(df$n), length.out = 100)
+p_gen <- seq(min(df$p), max(df$p), length.out = 100)
+pred <- outer(X=n_gen, Y=p_gen, FUN=function(x,y)predict(lr, data.frame(n = x, p = y), type = "response"))
+plot3d(x = df$n, y = df$p, z = df$EK,
+       xlab = 'n', ylab = 'p', zlab = 'EK',
+       col=c("blue"))
+col <- compute_colormap(pred)  
+surface3d(x = n_gen, y = p_gen, z = pred, color = col, back = "lines")
+```
 
 # Notes
 
