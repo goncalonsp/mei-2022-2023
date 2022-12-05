@@ -1,0 +1,105 @@
+---
+title: "Meta 3 - ANOVA 3 "
+output: 
+  html_notebook: 
+    toc: yes
+    toc_float:
+      collapsed: false
+    number_sections: true
+---
+
+# Dependencies ---------------
+
+```{r Libraries}
+#library(readr)
+#install.packages("ggplot2")
+#library(ggplot2)
+#install.packages("scatterplot3d", dependencies = TRUE)
+library(scatterplot3d)
+#install.packages("rgl")
+library(rgl)
+options(rgl.printRglwidget = TRUE)
+```
+
+```{r Load data set}
+df <- read.csv(file = "/Users/tiagodelgado/mei-proj/resultsMei.csv", header=TRUE)
+```
+
+## Analysis ---------------
+
+```{r Summary of data}
+summary(df)
+```
+
+# ANOVA 3 ---------------
+
+# Factors ---------------
+
+```{r Factors}
+n_vert <- factor(df$n_vert,levels = c(2000,3000,5000,9000))
+
+prob <- factor(df$prob,levels = c(0.3,0.5,0.7))
+
+code <- factor(df$Dinic,levels = c(1))
+
+head(df)
+
+str(df)
+
+table(df$code, df$prob, df$n_vert)
+
+library("ggpubr")
+ggboxplot(df, x = "n_vert", y = "time", color = "prob",
+          palette = c("#00AFBB", "#E7B800"))
+```
+
+
+```{r ANOVA 3 }
+res.aov1 <- aov(df$Dinic~df$prob*df$n_vert, data = df)
+summary(res.aov1)
+
+res.aov3 <- aov(df$code~df$prob*df$n_vert, data = df)
+summary(res.aov2)
+
+res.aov3 <- aov(df$code~df$prob*df$n_vert, data = df)
+summary(res.aov3)
+```
+
+
+```{r Grupping data}
+require("dplyr")
+group_by(df,code, prob, n_vert) %>%
+  summarise(
+    count = n(),
+    mean = mean(time, na.rm = TRUE),
+    sd = sd(time, na.rm = TRUE)
+  )
+
+model.tables(res.aov3, type="means", se = TRUE)
+
+```
+
+# Normalidade plots ---------------
+
+```{r Normalidade dos plots}
+
+plot(res.aov1, 1)
+
+plot(res.aov2, 1)
+
+plot(res.aov3)
+
+res<-res.aov3$residuals
+
+hist(res,main="Histogram of residuals",xlab="Residuals")
+
+```
+
+# Post HOC Analysis ---------------
+
+```{r Post HOC}
+TukeyHSD(res.aov1)
+plot(TukeyHSD(res.aov1, conf.level=.95), las = 2)
+```
+
+# -----------------
