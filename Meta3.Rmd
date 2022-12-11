@@ -19,10 +19,12 @@ library(scatterplot3d)
 #install.packages("rgl")
 library(rgl)
 options(rgl.printRglwidget = TRUE)
+library("ggpubr")
+require("dplyr")
 ```
 
 ```{r Load data set}
-df <- read.csv(file = "/Users/tiagodelgado/mei-proj/resultsMei.csv", header=TRUE)
+df <- read.csv(file = "resultsMei.csv", header=TRUE)
 ```
 
 ## Analysis ---------------
@@ -36,9 +38,9 @@ summary(df)
 # Factors ---------------
 
 ```{r Factors}
-n_vert <- factor(df$n_vert,levels = c(2000,3000,5000,9000))
+n_vert <- factor(df$n,levels = c(2000,3000,5000,9000))
 
-prob <- factor(df$prob,levels = c(0.3,0.5,0.7))
+prob <- factor(df$p,levels = c(0.3,0.5,0.7))
 
 code <- factor(df$Dinic,levels = c(1))
 
@@ -48,7 +50,6 @@ str(df)
 
 table(df$code, df$prob, df$n_vert)
 
-library("ggpubr")
 ggboxplot(df, x = "n_vert", y = "time", color = "prob",
           palette = c("#00AFBB", "#E7B800"))
 ```
@@ -67,7 +68,6 @@ summary(res.aov3)
 
 
 ```{r Grupping data}
-require("dplyr")
 group_by(df,code, prob, n_vert) %>%
   summarise(
     count = n(),
