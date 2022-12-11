@@ -57,11 +57,11 @@ def main():
         It outputs a file in the format:
 
         ```csv
-        n,p,r,s,Dinic,EK,MPM
-        100,0.5,100,86029955770628,0.000166945,0.00161067,0.000567869
-        100,0.5,100,86029955770628,0.000179486,0.00159629,0.000719177
-        100,0.5,100,86029955770628,0.00014913,0.00179331,0.000623259
-        100,0.5,100,86029955770628,0.000154795,0.00150538,0.000584598
+        n,p,r,s,alg,time
+        100,0.5,100,86029955770628,Dinic,0.000166945
+        100,0.5,100,86029955770628,EK,0.00159629
+        100,0.5,100,86029955770628,MPM,0.000623259
+        100,0.5,100,368539058687997,Dinic,0.000154795
         ...
         ```
 
@@ -108,27 +108,40 @@ def main():
                 generateGraph(parameter['n'], parameter['p'], parameter['r'], parameter['s'], graphFileName)
 
                 for i in range(repetitions):
-                    result = dict()
-                    result["n"] = parameter['n']
-                    result["p"] = parameter['p']
-                    result["r"] = parameter['r']
-                    result["s"] = parameter['s']
-
                     if 'dinic' in algorithms:
+                        result = dict()
+                        result["n"] = parameter['n']
+                        result["p"] = parameter['p']
+                        result["r"] = parameter['r']
+                        result["s"] = parameter['s']
+                        result["alg"] = "Dinic"
                         valueDinic, timeDinic = runAlgorithm("./code/Dinic", graphFileName, timeout)
-                        result["Dinic"] = timeDinic
+                        result["time"] = timeDinic
+                        results.append(result)
                     if 'ek' in algorithms:
+                        result = dict()
+                        result["n"] = parameter['n']
+                        result["p"] = parameter['p']
+                        result["r"] = parameter['r']
+                        result["s"] = parameter['s']
+                        result["alg"] = "EK"
                         valueEK, timeEK = runAlgorithm("./code/EK", graphFileName, timeout)
-                        result["EK"] = timeEK
+                        result["time"] = timeEK
+                        results.append(result)
                     if 'mpm' in algorithms:
+                        result = dict()
+                        result["n"] = parameter['n']
+                        result["p"] = parameter['p']
+                        result["r"] = parameter['r']
+                        result["s"] = parameter['s']
+                        result["alg"] = "MPM"
                         valueMPM, timeMPM = runAlgorithm("./code/MPM", graphFileName, timeout)
-                        result["MPM"] = timeMPM
-
-                    results.append(result)
+                        result["time"] = timeMPM
+                        results.append(result)
 
     print(f"writing results to '{resultsFileName}'...")
     with open(resultsFileName, 'w', newline='') as csvFile:
-        fieldNames = ["n", "p", "r", "s", "Dinic", "EK", "MPM"]
+        fieldNames = ["n", "p", "r", "s", "alg", "time"]
         csvWriter = csv.DictWriter(csvFile, fieldnames= fieldNames)
         csvWriter.writeheader()
         for result in results:
