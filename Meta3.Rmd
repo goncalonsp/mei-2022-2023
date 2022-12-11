@@ -12,19 +12,21 @@ output:
 
 ```{r Libraries}
 #library(readr)
-#install.packages("ggplot2")
-#library(ggplot2)
+install.packages("ggplot2")
+library(ggplot2)
+install.packages("dplyr")
+library(dplyr)
+install.packages("car")
+library(car)
 #install.packages("scatterplot3d", dependencies = TRUE)
 library(scatterplot3d)
 #install.packages("rgl")
 library(rgl)
 options(rgl.printRglwidget = TRUE)
-library("ggpubr")
-require("dplyr")
 ```
 
 ```{r Load data set}
-df <- read.csv(file = "resultsMei.csv", header=TRUE)
+df <- read.csv(file = "/Users/tiagodelgado/mei-proj/resultsMei_v2.csv", header=TRUE)
 ```
 
 ## Analysis ---------------
@@ -38,61 +40,68 @@ summary(df)
 # Factors ---------------
 
 ```{r Factors}
-n_vert <- factor(df$n,levels = c(2000,3000,5000,9000))
+n_vert <- factor(df$n_vert,levels = c(2000,3000,5000,9000))
 
-prob <- factor(df$p,levels = c(0.3,0.5,0.7))
+prob <- factor(df$prob,levels = c(0.3,0.5,0.7))
 
-code <- factor(df$Dinic,levels = c(1))
+algo <- factor(df$alg,levels = c("Dinic","EK","MPM"))
 
 head(df)
 
 str(df)
 
-table(df$code, df$prob, df$n_vert)
+table(df$alg, df$prob, df$n_vert, df$time)
 
-ggboxplot(df, x = "n_vert", y = "time", color = "prob",
+library("ggpubr")
+ggboxplot(df, x = "n_vert", y = "algo", color = "prob",
           palette = c("#00AFBB", "#E7B800"))
 ```
 
 
 ```{r ANOVA 3 }
-res.aov1 <- aov(df$Dinic~df$prob*df$n_vert, data = df)
+res.aov1 <- aov(df$time~df$alg*df$prob*df$n_vert, data = df)
 summary(res.aov1)
-
-res.aov3 <- aov(df$code~df$prob*df$n_vert, data = df)
-summary(res.aov2)
-
-res.aov3 <- aov(df$code~df$prob*df$n_vert, data = df)
-summary(res.aov3)
 ```
 
 
 ```{r Grupping data}
-group_by(df,code, prob, n_vert) %>%
+require("dplyr")
+group_by(df,alg, prob, n_vert) %>%
   summarise(
     count = n(),
     mean = mean(time, na.rm = TRUE),
     sd = sd(time, na.rm = TRUE)
   )
 
-model.tables(res.aov3, type="means", se = TRUE)
+model.tables(res.aov1, type="means", se = TRUE)
 
 ```
 
+# --------- Two-way interaction plot
+
+```{r interaction plot}
+interaction.plot(x.factor = df$alg, trace.factor = df$n_vert, 
+                 response = df$time, fun = mean, 
+                 type = "b", legend = TRUE, 
+                 xlab = "algo", ylab="cpu_time",
+                 pch=c(1,19), col = c("#00AFBB", "#E7B800"))
+
+interaction.plot(x.factor = df$alg, trace.factor = df$prob, 
+                 response = df$time, fun = mean, 
+                 type = "b", legend = TRUE, 
+                 xlab = "algo", ylab="cpu_time",
+                 pch=c(1,19), col = c("#00AFBB", "#E7B800"))
+```
 # Normalidade plots ---------------
 
 ```{r Normalidade dos plots}
-
 plot(res.aov1, 1)
 
-plot(res.aov2, 1)
-
-plot(res.aov3)
-
-res<-res.aov3$residuals
+res<-res.aov1$residuals
 
 hist(res,main="Histogram of residuals",xlab="Residuals")
 
+leveneTest(df$time~interaction(df$alg,df$prob),data=df)
 ```
 
 # Post HOC Analysis ---------------
