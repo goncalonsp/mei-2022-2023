@@ -55,7 +55,8 @@ str(df)
 
 table(df$alg, df$p, df$n, df$time)
 
-ggboxplot(df, x = "n", y = "alg")
+ggboxplot(df, x = "n", y = "alg", color = "p",
+          palette = c("#00AFBB", "#E7B800"))
 ```
 
 
