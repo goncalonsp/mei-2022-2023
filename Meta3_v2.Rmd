@@ -1,0 +1,119 @@
+---
+title: "Meta 3 - ANOVA 3 "
+output: 
+  html_notebook: 
+    toc: yes
+    toc_float:
+      collapsed: false
+    number_sections: true
+---
+
+# Dependencies ---------------
+
+```{r Libraries}
+#library(readr)
+#install.packages("ggplot2")
+library(ggplot2)
+#install.packages("dplyr")
+library(dplyr)
+#install.packages("car")
+library(car)
+#install.packages("scatterplot3d", dependencies = TRUE)
+library(scatterplot3d)
+#install.packages("rgl")
+library(rgl)
+options(rgl.printRglwidget = TRUE)
+library("ggpubr")
+require("dplyr")
+```
+
+# Dinic
+
+```{r Load data set}
+df <- read.csv(file = "results_tests_dinic.csv", header=TRUE)
+df$alg = factor(df$alg)
+df$n = factor(df$n)
+df$p = factor(df$p)
+```
+
+## Analysis ---------------
+
+```{r Summary of data}
+summary(df)
+```
+## Visualizing
+
+```{r Interactions}
+ggline(df, x = "p", y = "time", color = "n", add = c("mean_se"))
+ggline(df, x = "n", y = "time", color = "p", add = c("mean_se"))
+```
+
+```{r Plots}
+ggplot(df, aes(x = time, color = n, fill = n)) + geom_density(alpha = 0.1)
+ggboxplot(df, x = "n", y = "time", fill = "n", add = "jitter")
+ggboxplot(df, x = "p", y = "time", fill = "p", add = "jitter")
+ggboxplot(df, x = "n", y = "time", color = "p", add = "jitter")
+ggboxplot(df, x = "p", y = "time", color = "n", add = "jitter")
+```
+
+## ANOVA 3 ---------------
+
+```{r ANOVA 3 }
+res.aov1 <- aov(time ~ alg * p * n, data = df)
+summary(res.aov1)
+
+res.aov2 <- aov(time ~ alg * p, data = df)
+summary(res.aov2)
+
+res.aov3 <- aov(time ~ alg * n, data = df)
+summary(res.aov3)
+```
+
+
+```{r Grupping data}
+group_by(df,alg, p, n) %>%
+  summarise(
+    count = n(),
+    mean = mean(time, na.rm = TRUE),
+    sd = sd(time, na.rm = TRUE)
+  )
+
+model.tables(res.aov1, type="means", se = TRUE)
+
+```
+
+# --------- Two-way interaction plot
+
+```{r interaction plot}
+interaction.plot(x.factor = df$alg, trace.factor = df$n, 
+                 response = df$time, fun = mean, 
+                 type = "b", legend = TRUE, 
+                 xlab = "alg", ylab="time",
+                 pch=c(1,19), col = c("#00AFBB", "#E7B800"))
+
+interaction.plot(x.factor = df$alg, trace.factor = df$p, 
+                 response = df$time, fun = mean, 
+                 type = "b", legend = TRUE, 
+                 xlab = "alg", ylab="time",
+                 pch=c(1,19), col = c("#00AFBB", "#E7B800"))
+```
+# Normalidade plots ---------------
+
+```{r Normalidade dos plots}
+plot(res.aov1, 1)
+
+res <- res.aov1$residuals
+
+hist(res, main="Histogram of residuals", xlab="Residuals")
+
+leveneTest(time ~ interaction(alg, p), data=df)
+```
+
+# Post HOC Analysis ---------------
+
+```{r Post HOC}
+TukeyHSD(res.aov1)
+plot(TukeyHSD(res.aov1, conf.level=.95), las = 2)
+```
+
+# -----------------
