@@ -11,18 +11,19 @@ output:
 # Dependencies ---------------
 
 ```{r Libraries}
-#library(readr)
-#install.packages("ggplot2")
+#ibrary(readr)
+install.packages("ggplot2")
 library(ggplot2)
-#install.packages("dplyr")
+install.packages("dplyr")
 library(dplyr)
-#install.packages("car")
+install.packages("car")
 library(car)
 #install.packages("scatterplot3d", dependencies = TRUE)
 library(scatterplot3d)
 #install.packages("rgl")
-library(rgl)
-options(rgl.printRglwidget = TRUE)
+#library(rgl)
+#options(rgl.printRglwidget = TRUE)
+install.packages("ggpubr")
 library("ggpubr")
 require("dplyr")
 ```
@@ -30,7 +31,7 @@ require("dplyr")
 # Dinic
 
 ```{r Load data set}
-df <- read.csv(file = "results_tests_dinic.csv", header=TRUE)
+df <- read.csv(file = "results_tests_ek.csv", header=TRUE)
 df$alg = factor(df$alg)
 df$n = factor(df$n)
 df$p = factor(df$p)
@@ -46,6 +47,16 @@ summary(df)
 ```{r Interactions}
 ggline(df, x = "p", y = "time", color = "n", add = c("mean_se"))
 ggline(df, x = "n", y = "time", color = "p", add = c("mean_se"))
+interaction.plot(x.factor = df$p, trace.factor = df$n, 
+                 response = df$time, fun = mean, 
+                 type = "b", legend = TRUE, 
+                 xlab = "prob", ylab="time",
+                 pch=c(1,19), col = c("#00AFBB", "#E7B800"))
+interaction.plot(x.factor = df$n, trace.factor = df$p, 
+                 response = df$time, fun = mean, 
+                 type = "b", legend = TRUE, 
+                 xlab = "n_vert", ylab="time",
+                 pch=c(1,19), col = c("#00AFBB", "#E7B800"))
 ```
 
 ```{r Plots}
@@ -67,20 +78,45 @@ summary(res.aov1)
 
 ```{r Normalidade dos plots}
 plot(res.aov1, 1)
+residuals_dinic <- res.aov1$residuals
+qqnorm(residuals_dinic)
+qqline(residuals_dinic)
 
-res <- res.aov1$residuals
+hist(residuals_dinic, main="Histogram of residuals", xlab="Residuals")
 
-hist(res, main="Histogram of residuals", xlab="Residuals")
-
-qqnorm(res)
-qqline(res)
-
-leveneTest(time ~ interaction(n, p), data=df)
+leveneTest(time ~ n * p, data=df)
 ```
-
 ## Post HOC Analysis ---------------
 
 ```{r Post HOC}
 TukeyHSD(res.aov1)
 plot(TukeyHSD(res.aov1, conf.level=.95), las = 2)
+```
+
+## OPT N Paramétrica --------------- Randomization test
+
+```{r}
+df$timerand <- df$time
+res.aov1 <- aov(timerand ~ p * n, data = df)
+FS =summary(res.aov1)[[1]]$F[1]
+FP=summary(res.aov1)[[1]]$F[2]
+FSP = summary(res.aov1)[[1]]$F[3]
+tFS = c(FS)
+tFP= c(FP)
+tFSP = c(FSP)
+for (i in 1:5000){ 
+  df$timerand =sample(df$timerand)
+res.aov1 <- aov(timerand ~ p * n, data = df)
+  pFS =summary(res.aov1)[[1]]$F[1]
+  pFP = summary(res.aov1)[[1]]$F[2]
+  pFSP = summary(res.aov1)[[1]]$F[3]
+  tFS = c(tFS,pFS)
+  tFP = c(tFP,pFP)
+  tFSP = c(tFSP,pFSP)
+}
+print(length(tFS[tFS >=FS])/5000)
+print(length(tFP[tFP >=FP])/5000)
+print(length(tFSP[tFSP >=FSP])/5000)
+ggline(df, x = "p", y = "timerand", color = "n", add = c("mean_se"))
+ggline(df, x = "n", y = "timerand", color = "p", add = c("mean_se"))
 ```
