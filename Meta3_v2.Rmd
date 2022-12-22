@@ -12,18 +12,18 @@ output:
 
 ```{r Libraries}
 #ibrary(readr)
-install.packages("ggplot2")
+#install.packages("ggplot2")
 library(ggplot2)
-install.packages("dplyr")
+#install.packages("dplyr")
 library(dplyr)
-install.packages("car")
+#install.packages("car")
 library(car)
 #install.packages("scatterplot3d", dependencies = TRUE)
 library(scatterplot3d)
 #install.packages("rgl")
 #library(rgl)
 #options(rgl.printRglwidget = TRUE)
-install.packages("ggpubr")
+#install.packages("ggpubr")
 library("ggpubr")
 require("dplyr")
 ```
@@ -31,7 +31,7 @@ require("dplyr")
 # Dinic
 
 ```{r Load data set}
-df <- read.csv(file = "results_tests_ek.csv", header=TRUE)
+df <- read.csv(file = "results_tests_dinic.csv", header=TRUE)
 df$alg = factor(df$alg)
 df$n = factor(df$n)
 df$p = factor(df$p)
@@ -98,25 +98,25 @@ plot(TukeyHSD(res.aov1, conf.level=.95), las = 2)
 ```{r}
 df$timerand <- df$time
 res.aov1 <- aov(timerand ~ p * n, data = df)
-FS =summary(res.aov1)[[1]]$F[1]
-FP=summary(res.aov1)[[1]]$F[2]
+FS = summary(res.aov1)[[1]]$F[1]
+FP = summary(res.aov1)[[1]]$F[2]
 FSP = summary(res.aov1)[[1]]$F[3]
 tFS = c(FS)
-tFP= c(FP)
+tFP = c(FP)
 tFSP = c(FSP)
 for (i in 1:5000){ 
   df$timerand =sample(df$timerand)
-res.aov1 <- aov(timerand ~ p * n, data = df)
-  pFS =summary(res.aov1)[[1]]$F[1]
+  res.aov1 <- aov(timerand ~ p * n, data = df)
+  pFS = summary(res.aov1)[[1]]$F[1]
   pFP = summary(res.aov1)[[1]]$F[2]
   pFSP = summary(res.aov1)[[1]]$F[3]
   tFS = c(tFS,pFS)
   tFP = c(tFP,pFP)
   tFSP = c(tFSP,pFSP)
 }
-print(length(tFS[tFS >=FS])/5000)
-print(length(tFP[tFP >=FP])/5000)
-print(length(tFSP[tFSP >=FSP])/5000)
+print(length(tFS[tFS >= FS])/5000)
+print(length(tFP[tFP >= FP])/5000)
+print(length(tFSP[tFSP >= FSP])/5000)
 ggline(df, x = "p", y = "timerand", color = "n", add = c("mean_se"))
 ggline(df, x = "n", y = "timerand", color = "p", add = c("mean_se"))
 ```
