@@ -30,6 +30,7 @@ require("dplyr")
 ```{r Load data set}
 df <- read.csv(file = "resultsMei_v2.csv", header=TRUE)
 df$alg = factor(df$alg) # take alg as categorical data
+df$time_log = log(df$time+1)
 ```
 
 ## Analysis ---------------
@@ -54,15 +55,37 @@ head(df)
 str(df)
 
 table(df$alg, df$p, df$n, df$time)
+```
 
-ggboxplot(df, x = "n", y = "alg", color = "p",
-          palette = c("#00AFBB", "#E7B800"))
+```{r Interactions}
+ggline(df, x = "n", y = "time", color = "alg", add = c("mean_se"))
+ggline(df, x = "n", y = "time_log", color = "alg", add = c("mean_se"))
+ggline(df, x = "p", y = "time", color = "alg", add = c("mean_se"))
+ggline(df, x = "p", y = "time_log", color = "alg", add = c("mean_se"))
+ggline(df, x = "n", y = "time", color = "p", add = c("mean_se"))
+ggline(df, x = "n", y = "time_log", color = "p", add = c("mean_se"))
+```
+
+```{r Plots}
+ggplot(df, aes(x = time, color = alg, fill = alg)) + geom_density(alpha = 0.1)
+
+ggboxplot(df, x = "n", y = "time", fill = "n", add = "jitter")
+ggboxplot(df, x = "p", y = "time", fill = "p", add = "jitter")
+ggboxplot(df, x = "alg", y = "time", fill = "alg", add = "jitter")
+ggboxplot(df, x = "n", y = "time", color = "alg", fill = "n", add = "jitter")
+ggboxplot(df, x = "p", y = "time", color = "alg", fill = "p", add = "jitter")
 ```
 
 
 ```{r ANOVA 3 }
 res.aov1 <- aov(time ~ alg * p * n, data = df)
 summary(res.aov1)
+
+res.aov2 <- aov(time ~ alg * p, data = df)
+summary(res.aov2)
+
+res.aov3 <- aov(time ~ alg * n, data = df)
+summary(res.aov3)
 ```
 
 
